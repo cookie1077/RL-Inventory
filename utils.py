@@ -44,10 +44,11 @@ def environment_name(prefix='Environment_', version=4.0, lead_time=4, mean = 5,s
     return name
 
 
-def experiment_name(prefix='Experiment_', version=4.0, lead_time=4, mean = 5, std=1, p=4.0, alpha=1,
+def experiment_name(prefix='_Experiment_', exp_id=0, version=4.0, lead_time=4, mean = 5, std=1, p=4.0, alpha=1,
                     algorithm='ddpg', x_actor_lr=4.0, x_critic_lr=3.0, x_tau=3.0,
                     step=0):
-    name = prefix + \
+    name = 'exp_id=' + str(exp_id) + \
+            prefix + \
            'ver_.' + str(version) + \
            '(l=' + str(lead_time) + \
            ', mean=' + str(mean) + \

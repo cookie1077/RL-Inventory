@@ -3,7 +3,6 @@ from torch.nn import MSELoss
 import numpy as np
 import copy
 from buffer import ReplayBuffer
-#from ray.rllib.utils.replay_buffers.replay_buffer import ReplayBuffer
 from model import Actor, Critic
 
 
@@ -40,7 +39,7 @@ class Agent:
         if algorithm == 'ddpg':
             self.pi = Actor(dimS, dimA, hidden_layers)
         elif algorithm == 'iddpg':
-            self.pi = Actor(1, dimA, hidden_layers)
+            self.pi = Actor(3, dimA, hidden_layers)
         elif algorithm == 'inddpg':
             self.pi = Actor(dimS, dimA, hidden_layers)
         else:
@@ -74,7 +73,7 @@ class Agent:
         if self.algorithm == 'ddpg':
             state = torch.tensor(state, dtype=torch.float)
         elif self.algorithm == 'iddpg':
-            state = [state.sum()]
+            state = [state[:-2].sum(),state[-2],state[-1]]
             state = torch.tensor(state, dtype=torch.float)
         elif self.algorithm == 'inddpg':
             state = [state.sum()] * len(state)

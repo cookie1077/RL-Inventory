@@ -5,7 +5,7 @@ import os.path
 import numpy as np
 import glob
 
-from learning import run_rl
+from learning_extend import run_rl_plus
 from agent import Agent
 from itertools import product
 from utils import experiment_name
@@ -16,9 +16,15 @@ assert ray.is_initialized() == True
 
 
 
-version = 5.0
-load_experiment_num = 0
-experiment_num = 1
+version = 5.1
+experiment_num = 9
+
+fine_tune = False
+
+load_experiment_num = 5
+load_mean = 3.0
+load_std = 1.0
+
 
 if not os.path.isdir(f'./experiment_{experiment_num}'):
     os.makedirs(f'./experiment_{experiment_num}')
@@ -27,7 +33,7 @@ if not os.path.isdir(f'./experiment_{experiment_num}'):
     os.makedirs(f'./experiment_{experiment_num}/data')
     os.makedirs(f'./experiment_{experiment_num}/summary data')
 
-final_experiment_num = 1
+final_experiment_num = 3
 final_experiment_ids = []
 df_final_experiment = pd.read_csv('./Final Experiment_trial.csv')
 print(ray.is_initialized())
@@ -39,6 +45,8 @@ for index, row in df_final_experiment.iterrows():
     
     lead_time, mean, std, p, alpha, x_actor_lr, x_critic_lr, x_tau =\
         int(lead_time), float(mean),float(std), float(p), float(alpha), float(x_actor_lr), float(x_critic_lr), float(x_tau)
+    
+
     for step in range(final_experiment_num):
         csv_file_name = './experiment_' + str(experiment_num) + '/data/' + \
                         experiment_name(version=version, lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
@@ -46,26 +54,28 @@ for index, row in df_final_experiment.iterrows():
                                         x_tau=x_tau,
                                         step=step) + '.csv'
         
-        glob_path = './experiment_' + str(load_experiment_num) + '/checkpoints_cost/' + experiment_name(version=version, lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
-                                        algorithm=algorithm, x_actor_lr=x_actor_lr, x_critic_lr=x_critic_lr, x_tau=x_tau,step=step) + "*.pth.tar"
-            
-        #weight_path = glob.glob(glob_path)[-1]
-        weight_path = glob_path
-        #print(weight_path)
+        weight_path = None
+        if fine_tune:
+             glob_path = f'./experiment_{load_experiment_num}/checkpoints_cost/Experiment_ver_.5.0(l=0, mean={load_mean}, std={load_std},*_(A={algorithm}, *)*.pth.tar'
+             weight_path = glob.glob(glob_path)[-1]
+             print(weight_path)
+             print(experiment_name(version=version, lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
+                                            algorithm=algorithm, x_actor_lr=x_actor_lr, x_critic_lr=x_critic_lr,
+                                            x_tau=x_tau,
+                                            step=step))
 
         if os.path.isfile(csv_file_name):
             print('exist')
             continue
            
 
-        final_experiment_ids.append(run_rl.remote(version=version, experiment_num=experiment_num,
+        final_experiment_ids.append(run_rl_plus.remote(version=version, experiment_num=experiment_num,
                                                   lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
                                                   algorithm=algorithm, x_actor_lr=x_actor_lr,
                                                   x_critic_lr=x_critic_lr, x_tau=x_tau,
-                                                  step=step,fine_tune = False, load_path = weight_path, test=False
+                                                  step=step,fine_tune = fine_tune, load_path = weight_path
                                                   ))
 
-print(final_experiment_ids)
 ray.get(final_experiment_ids)
 
 final_experiment_results = [0] * (len(df_final_experiment) * final_experiment_num)

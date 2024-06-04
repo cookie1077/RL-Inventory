@@ -12,13 +12,12 @@ import argparse
 from ray import tune
 from agent import Agent
 from utils import experiment_name
-from environment import InventoryEnv
+from environment_extend import InventoryEnv_plus
 import matplotlib.pyplot as plt
 
 
 @ray.remote
-def run_rl(version=4.0,
-           exp_id = 0,
+def run_rl_plus(version=4.0,
            experiment_num=0,
            algorithm='ddpg',
            fixed_cost=0,
@@ -45,8 +44,7 @@ def run_rl(version=4.0,
            render=False,
            step=0,
            fine_tune = False,
-           load_path = None,
-           test = False):
+           load_path = None):
     
     max_iter = int(max_iter)
     max_ep_len = int(max_ep_len)
@@ -61,9 +59,10 @@ def run_rl(version=4.0,
     else:
         penalty = True
 
-    env = InventoryEnv(fixed_cost, lead_time, mean, std, p, alpha)
+    env = InventoryEnv_plus(fixed_cost, lead_time, mean, std, p, alpha)
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]
+    print(f'flag : dimension, {state_dim}, {action_dim}')
 
     agent = Agent(algorithm=algorithm,
                   dimS=state_dim,
@@ -81,27 +80,6 @@ def run_rl(version=4.0,
     if fine_tune:
         agent.load_model(load_path)
 
-    if test:
-        agent.load_model(load_path)
-
-        costs = []
-        policies = []
-
-        for i in range(5):
-            cost_value = eval_cost(agent, lead_time, mean, std, p, alpha)
-            policy_value = eval_policy(agent, lead_time, mean, std, p, alpha)
-
-            costs.append(cost_value)
-            policies.append(policy_value)
-        
-        cost_value = np.mean(np.array(costs))
-        policy_value = np.mean(np.array(policies))
-
-        print('Testing for exp', exp_id, lead_time, mean, std, p, alpha, algorithm, x_actor_lr, x_critic_lr, x_tau,
-                      '|  cost_value: {:.4f}  |  policy_value: {:.4f}'.format(cost_value, policy_value))
-        
-        return (cost_value, policy_value)
-
     # name
     name = experiment_name(version=version,
                            lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
@@ -112,6 +90,7 @@ def run_rl(version=4.0,
 
     # initialize
     state = env.reset()
+    print(f'flag : initial state, {state}')
     step_count = 0
     ep_reward = 0
 
@@ -136,7 +115,7 @@ def run_rl(version=4.0,
             action = agent.get_action(state)
 
         # environment step
-        next_state, reward, done, _ = env.step(action, translate=True, evaluate=False, penalty=penalty)
+        next_state, reward, done, _ = env.step(action, translate=True, evaluate=False, penalty=penalty) # 수정
         step_count += 1
 
         if step_count == max_ep_len:
@@ -201,7 +180,7 @@ def eval_cost(agent, lead_time, mean, std, p, alpha, eval_num=100, render=False)
     list_cost = []
 
     for ep in range(eval_num):
-        env = InventoryEnv(lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha)
+        env = InventoryEnv_plus(lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha)
 
         state = env.reset_eval()
         step_count = 0
@@ -212,9 +191,11 @@ def eval_cost(agent, lead_time, mean, std, p, alpha, eval_num=100, render=False)
             if render and ep == 0:
                 env.render()
 
+            print(f'flag : eval initial state, {state}')
             action = agent.get_action(state, eval=True)
 
-            next_state, reward, done, _ = env.step(action, evaluate=True)
+            next_state, reward, done, _ = env.step(action, evaluate=True) # 수정
+            print(f'flag : eval next state, {next_state}')
             step_count += 1
             state = next_state
 
@@ -231,7 +212,7 @@ def eval_cost(agent, lead_time, mean, std, p, alpha, eval_num=100, render=False)
 def eval_policy(agent, lead_time, mean, std, p, alpha, eval_num=5000):
     list_policy = [100] * eval_num
     list_action_optimal = [100] * eval_num
-    env = InventoryEnv(lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha)
+    env = InventoryEnv_plus(lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha)
 
     for i in range(eval_num):
         state = env.reset_eval()

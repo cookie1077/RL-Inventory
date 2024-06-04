@@ -6,3 +6,8 @@ gym
 scipy
 matplotlib
 ray
+"ray[tune]"
+"ray[rllib]"
+buffer
+gymnasium
+dm_tree
