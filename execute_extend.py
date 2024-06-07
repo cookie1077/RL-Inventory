@@ -5,10 +5,10 @@ import os.path
 import numpy as np
 import glob
 
-from learning_extend import run_rl_plus
-from agent_extend import Agent
-from itertools import product
-from utils import experiment_name
+from learning_extend import run_rl_plus 
+from agent_extend import Agent 
+from itertools import product 
+from utils import experiment_name 
 
 
 ray.init(num_cpus=8)
@@ -16,14 +16,14 @@ assert ray.is_initialized() == True
 
 
 
-version = 5.1
-experiment_num = 11
+version = 5.1 
+experiment_num = 12 
 
 fine_tune = True
 
-load_experiment_num = 10
-load_mean = 5.0
-load_std = 1.0
+load_experiment_num = 11 
+load_mean = 7.0 
+load_std = 1.0 
 
 
 if not os.path.isdir(f'./experiment_{experiment_num}'):
