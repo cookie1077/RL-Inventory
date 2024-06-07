@@ -18,7 +18,7 @@ assert ray.is_initialized() == True
 
 version = 5.0
 load_experiment_num = 0
-experiment_num = 1
+experiment_num = 3
 
 if not os.path.isdir(f'./experiment_{experiment_num}'):
     os.makedirs(f'./experiment_{experiment_num}')

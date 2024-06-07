@@ -2,7 +2,7 @@ import torch.optim
 from torch.nn import MSELoss
 import numpy as np
 import copy
-from buffer import ReplayBuffer
+from buffer_extend import ReplayBuffer
 from model import Actor, Critic
 
 

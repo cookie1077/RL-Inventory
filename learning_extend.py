@@ -191,11 +191,11 @@ def eval_cost(agent, lead_time, mean, std, p, alpha, eval_num=100, render=False)
             if render and ep == 0:
                 env.render()
 
-            print(f'flag : eval initial state, {state}')
+            #print(f'flag : eval initial state, {state}')
             action = agent.get_action(state, eval=True)
 
             next_state, reward, done, _ = env.step(action, evaluate=True) # 수정
-            print(f'flag : eval next state, {next_state}')
+            #print(f'flag : eval next state, {next_state}')
             step_count += 1
             state = next_state
 

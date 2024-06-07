@@ -48,6 +48,8 @@ def run_rl(version=4.0,
            load_path = None,
            test = False):
     
+    print('started')
+    
     max_iter = int(max_iter)
     max_ep_len = int(max_ep_len)
     buffer_size = int(buffer_size)

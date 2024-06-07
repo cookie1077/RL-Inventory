@@ -167,7 +167,7 @@ class InventoryEnv_plus(gym.Env):
             observation = np.append(inv_f, pipeline)
         elif self.leadtime > 2:
             inv_f += self.state[1]
-            pipeline = np.append(self.state[2:], order)
+            pipeline = np.append(self.state[2:-2], order)
             observation = np.append(inv_f, pipeline)
         else:
             observation = 0
@@ -262,7 +262,7 @@ class InventoryEnv_plus(gym.Env):
 
     def optimal_action(self, state):
         _, S_optimal = self.optimal_solution()
-        action = max(0.0, min(self.max_order, S_optimal - state.sum()))
+        action = max(0.0, min(self.max_order, S_optimal - state[:-2].sum()))
 
         return action
 
