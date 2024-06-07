@@ -10,7 +10,7 @@ import argparse
 
 
 from ray import tune
-from agent import Agent
+from agent_extend import Agent
 from utils import experiment_name
 from environment_extend import InventoryEnv_plus
 import matplotlib.pyplot as plt
