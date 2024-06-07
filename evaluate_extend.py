@@ -5,8 +5,8 @@ import os.path
 import numpy as np
 import glob
 
-from learning import run_rl
-from agent import Agent
+from learning_extend import run_rl_plus
+from agent_extend import Agent
 from itertools import product
 from utils import experiment_name
 
@@ -17,19 +17,17 @@ assert ray.is_initialized() == True
 
 
 version = 5.1
-load_experiment_num = 0
-experiment_num = 1
+load_experiment_num=12
 
-if not os.path.isdir(f'./experiment_{experiment_num}'):
-    os.makedirs(f'./experiment_{experiment_num}')
-    os.makedirs(f'./experiment_{experiment_num}/checkpoints_cost')
-    os.makedirs(f'./experiment_{experiment_num}/checkpoints_policy')
-    os.makedirs(f'./experiment_{experiment_num}/data')
-    os.makedirs(f'./experiment_{experiment_num}/summary data')
+if not os.path.isdir(f'./experiment_{load_experiment_num}'):
+    os.makedirs(f'./experiment_{load_experiment_num}')
+    os.makedirs(f'./experiment_{load_experiment_num}/checkpoints_cost')
+    os.makedirs(f'./experiment_{load_experiment_num}/checkpoints_policy')
+    os.makedirs(f'./experiment_{load_experiment_num}/data')
+    os.makedirs(f'./experiment_{load_experiment_num}/summary data')
 
-final_experiment_num = 1
-final_experiment_ids = []
-lr_list = [[5.5, 3.5], [6.0, 4.0], [6.5, 4.5]]
+#lr_list = [[5.5, 3.5], [6.0, 4.0], [6.5, 4.5]]
+lr_list = [[5.5, 3.5]]
 
 df_final_experiment = pd.read_csv('./Evaluate_env.csv')
 df_final_models = pd.read_csv('./Evaluate_model.csv')
@@ -54,7 +52,7 @@ for i in range(1, len(df_final_experiment)):
         x_actor_lr = lr_list[i][0]
         x_critic_lr = lr_list[i][1]
     
-        glob_path = './inference/' + experiment_name(exp_id = exp_id, version=version, lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
+        glob_path = f'./experiment_{load_experiment_num}/checkpoints_cost/' + experiment_name(exp_id = exp_id, version=version, lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
                                             algorithm=algorithm, x_actor_lr=x_actor_lr, x_critic_lr=x_critic_lr, x_tau=x_tau,step=step) + "*.pth.tar"
         
         weight_path = glob_path
@@ -79,7 +77,7 @@ for i in range(1, len(df_final_experiment)):
             int(lead_time), float(mean),float(std), float(p), float(alpha), float(x_actor_lr), float(x_critic_lr), float(x_tau)
         
         
-        result = run_rl.remote(exp_id= exp_id, version=version, experiment_num=experiment_num,
+        result = run_rl_plus.remote(exp_id= exp_id, version=version, experiment_num=load_experiment_num,
                                                     lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
                                                     algorithm=algorithm, x_actor_lr=x_actor_lr,
                                                     x_critic_lr=x_critic_lr, x_tau=x_tau,

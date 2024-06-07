@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 
 @ray.remote
 def run_rl_plus(version=4.0,
+           exp_id=0,
            experiment_num=0,
            algorithm='ddpg',
            fixed_cost=0,
@@ -44,7 +45,8 @@ def run_rl_plus(version=4.0,
            render=False,
            step=0,
            fine_tune = False,
-           load_path = None):
+           load_path = None,
+           test = False):
     
     max_iter = int(max_iter)
     max_ep_len = int(max_ep_len)
@@ -79,6 +81,28 @@ def run_rl_plus(version=4.0,
     
     if fine_tune:
         agent.load_model(load_path)
+
+
+    if test:
+        agent.load_model(load_path)
+
+        costs = []
+        policies = []
+
+        for i in range(5):
+            cost_value = eval_cost(agent, lead_time, mean, std, p, alpha)
+            policy_value = eval_policy(agent, lead_time, mean, std, p, alpha)
+
+            costs.append(cost_value)
+            policies.append(policy_value)
+        
+        cost_value = np.mean(np.array(costs))
+        policy_value = np.mean(np.array(policies))
+
+        print('Testing for exp', exp_id, lead_time, mean, std, p, alpha, algorithm, x_actor_lr, x_critic_lr, x_tau,
+                      '|  cost_value: {:.4f}  |  policy_value: {:.4f}'.format(cost_value, policy_value))
+        
+        return (cost_value, policy_value)
 
     # name
     name = experiment_name(version=version,
