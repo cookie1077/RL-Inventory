@@ -17,12 +17,12 @@ assert ray.is_initialized() == True
 
 
 version = 5.1
-experiment_num = 10
+experiment_num = 11
 
-fine_tune = False
+fine_tune = True
 
-load_experiment_num = 5
-load_mean = 3.0
+load_experiment_num = 10
+load_mean = 5.0
 load_std = 1.0
 
 
@@ -56,7 +56,7 @@ for index, row in df_final_experiment.iterrows():
         
         weight_path = None
         if fine_tune:
-             glob_path = f'./experiment_{load_experiment_num}/checkpoints_cost/Experiment_ver_.5.0(l=0, mean={load_mean}, std={load_std},*_(A={algorithm}, *)*.pth.tar'
+             glob_path = f'./experiment_{load_experiment_num}/checkpoints_cost/exp_id=0_Experiment_ver_.5.1(l=0, mean={load_mean}, std={load_std},*_(A={algorithm}, *)*.pth.tar'
              weight_path = glob.glob(glob_path)[-1]
              print(weight_path)
              print(experiment_name(version=version, lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
