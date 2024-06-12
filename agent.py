@@ -17,15 +17,18 @@ class Agent:
                  critic_lr=1e-3,
                  tau=1e-3,
                  sigma=0.5,
-                 hidden_layers=[150, 120, 80, 20],
+                 hidden_layers=[128, 128, 64, 64, 32, 32],
                  buffer_size=int(1e6),
                  batch_size=128,
-                 render=False):
+                 render=False,
+                 freeze=False):
 
         # original case: hidden_layers= [400, 300]
         self.algorithm = algorithm
         self.dimS = dimS
         self.dimA = dimA
+        self.freeze = freeze
+        self.layers_to_freeze = 2
         
         self.gamma = gamma
         self.pi_lr = actor_lr
@@ -55,9 +58,30 @@ class Agent:
         # buffer setting
         self.buffer = ReplayBuffer(algorithm, dimS, dimA, limit=buffer_size)
 
-        # optimizer setting
-        self.Q_optimizer = torch.optim.Adam(self.Q.parameters(), lr=self.q_lr)
-        self.pi_optimizer = torch.optim.Adam(self.pi.parameters(), lr=self.pi_lr)
+        # freeze options
+        if self.freeze:
+            # Freeze the last few layers
+            layers_to_freeze = self.layers_to_freeze  # number of final layers to freeze
+            for i in range(0, layers_to_freeze):
+                for param in self.pi.module_list[i].parameters():
+                    param.requires_grad = False
+
+            # Create optimizer only for unfrozen parameters
+            self.pi_optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, self.pi.parameters()), lr=self.pi_lr)
+
+            # Freeze the last few layers
+            layers_to_freeze = self.layers_to_freeze  # number of final layers to freeze
+            for i in range(0, layers_to_freeze):
+                for param in self.Q.module_list[i].parameters():
+                    param.requires_grad = False
+
+            # Create optimizer only for unfrozen parameters
+            self.Q_optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, self.Q.parameters()), lr=self.q_lr)
+        else:
+            # optimizer setting
+            self.Q_optimizer = torch.optim.Adam(self.Q.parameters(), lr=self.q_lr)
+            self.pi_optimizer = torch.optim.Adam(self.pi.parameters(), lr=self.pi_lr)
+
 
         self.render = render
 
@@ -186,8 +210,30 @@ class Agent:
         self.Q.load_state_dict(checkpoint['critic'])
         self.targ_pi.load_state_dict(checkpoint['target_actor'])
         self.targ_Q.load_state_dict(checkpoint['target_critic'])
-        self.pi_optimizer.load_state_dict(checkpoint['actor_optimizer'])
-        self.Q_optimizer.load_state_dict(checkpoint['critic_optimizer'])
+
+        # freeze options
+        if self.freeze:
+            # Freeze the last few layers
+            layers_to_freeze = self.layers_to_freeze  # number of final layers to freeze
+            for i in range(0, layers_to_freeze):
+                for param in self.pi.module_list[i].parameters():
+                    param.requires_grad = False
+
+            # Create optimizer only for unfrozen parameters
+            self.pi_optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, self.pi.parameters()), lr=self.pi_lr)
+
+            # Freeze the last few layers
+            layers_to_freeze = self.layers_to_freeze  # number of final layers to freeze
+            for i in range(0, layers_to_freeze):
+                for param in self.Q.module_list[i].parameters():
+                    param.requires_grad = False
+
+            # Create optimizer only for unfrozen parameters
+            self.Q_optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, self.Q.parameters()), lr=self.q_lr)
+        
+        else :
+            self.pi_optimizer.load_state_dict(checkpoint['actor_optimizer'])
+            self.Q_optimizer.load_state_dict(checkpoint['critic_optimizer'])
 
         return
 

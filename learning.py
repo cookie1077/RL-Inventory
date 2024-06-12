@@ -33,7 +33,7 @@ def run_rl(version=4.0,
            x_tau=3.0,
            sigma=0.1,
            hidden_layers=[150, 120, 80, 20],
-           max_iter=100000,
+           max_iter=50000,
            max_ep_len=500,
            eval_interval=1000,
            start_train=10000,
@@ -45,6 +45,7 @@ def run_rl(version=4.0,
            render=False,
            step=0,
            fine_tune = False,
+           freeze = False,
            load_path = None,
            test = False):
     
@@ -78,7 +79,8 @@ def run_rl(version=4.0,
                   hidden_layers=hidden_layers,
                   buffer_size=buffer_size,
                   batch_size=batch_size,
-                  render=render)
+                  render=render,
+                  freeze = freeze)
     
     if fine_tune:
         agent.load_model(load_path)

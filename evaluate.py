@@ -16,30 +16,28 @@ assert ray.is_initialized() == True
 
 
 
-version = 5.1
-load_experiment_num = 0
-experiment_num = 1
+version = 5.0
+load_experiment_num=15
 
-if not os.path.isdir(f'./experiment_{experiment_num}'):
-    os.makedirs(f'./experiment_{experiment_num}')
-    os.makedirs(f'./experiment_{experiment_num}/checkpoints_cost')
-    os.makedirs(f'./experiment_{experiment_num}/checkpoints_policy')
-    os.makedirs(f'./experiment_{experiment_num}/data')
-    os.makedirs(f'./experiment_{experiment_num}/summary data')
+if not os.path.isdir(f'./experiment_{load_experiment_num}'):
+    os.makedirs(f'./experiment_{load_experiment_num}')
+    os.makedirs(f'./experiment_{load_experiment_num}/checkpoints_cost')
+    os.makedirs(f'./experiment_{load_experiment_num}/checkpoints_policy')
+    os.makedirs(f'./experiment_{load_experiment_num}/data')
+    os.makedirs(f'./experiment_{load_experiment_num}/summary data')
 
-final_experiment_num = 1
-final_experiment_ids = []
-lr_list = [[5.5, 3.5], [6.0, 4.0], [6.5, 4.5]]
+#lr_list = [[5.5, 3.5], [6.0, 4.0], [6.5, 4.5]]
+lr_list = [[5.5, 3.5]]
 
 df_final_experiment = pd.read_csv('./Evaluate_env.csv')
 df_final_models = pd.read_csv('./Evaluate_model.csv')
 
 print(ray.is_initialized())
 print(os.getcwd())
-step=2
+step=0
         
 
-for i in range(1, len(df_final_experiment)):
+for i in range(0, len(df_final_experiment)):
     row_env = df_final_experiment.iloc[i]
     row_model = df_final_models.iloc[i]
 
@@ -54,9 +52,13 @@ for i in range(1, len(df_final_experiment)):
         x_actor_lr = lr_list[i][0]
         x_critic_lr = lr_list[i][1]
     
-        glob_path = './inference/' + experiment_name(exp_id = exp_id, version=version, lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
-                                            algorithm=algorithm, x_actor_lr=x_actor_lr, x_critic_lr=x_critic_lr, x_tau=x_tau,step=step) + "*.pth.tar"
+        #glob_path = f'./experiment_{load_experiment_num}/checkpoints_cost/' + experiment_name(exp_id = exp_id, version=version, lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
+        #                                   algorithm=algorithm, x_actor_lr=x_actor_lr, x_critic_lr=x_critic_lr, x_tau=x_tau,step=step) + "*.pth.tar"
         
+        glob_path = './inference/' + experiment_name(exp_id = exp_id, version=version, lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
+                                           algorithm=algorithm, x_actor_lr=x_actor_lr, x_critic_lr=x_critic_lr, x_tau=x_tau,step=2) + "*.pth.tar"
+
+
         weight_path = glob_path
         # Use glob to find files that match the pattern
         matching_files = glob.glob(weight_path)
@@ -79,11 +81,11 @@ for i in range(1, len(df_final_experiment)):
             int(lead_time), float(mean),float(std), float(p), float(alpha), float(x_actor_lr), float(x_critic_lr), float(x_tau)
         
         
-        result = run_rl.remote(exp_id= exp_id, version=version, experiment_num=experiment_num,
+        result = run_rl.remote(exp_id= exp_id, version=version, experiment_num=load_experiment_num,
                                                     lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
                                                     algorithm=algorithm, x_actor_lr=x_actor_lr,
                                                     x_critic_lr=x_critic_lr, x_tau=x_tau,
-                                                    step=step,fine_tune = False, load_path = file, test=True)
+                                                    step=step,fine_tune = False, load_path = file, test=True, freeze=True)
         
         cost_value, policy_value = ray.get(result)
         
