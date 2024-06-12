@@ -17,8 +17,12 @@ assert ray.is_initialized() == True
 
 
 version = 5.0
-load_experiment_num = 0
-experiment_num = 3
+load_experiment_num = 17
+load_mean = 7.0 
+load_std = 1.0 
+
+
+experiment_num = 18
 
 if not os.path.isdir(f'./experiment_{experiment_num}'):
     os.makedirs(f'./experiment_{experiment_num}')
@@ -46,12 +50,8 @@ for index, row in df_final_experiment.iterrows():
                                         x_tau=x_tau,
                                         step=step) + '.csv'
         
-        glob_path = './experiment_' + str(load_experiment_num) + '/checkpoints_cost/' + experiment_name(version=version, lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
-                                        algorithm=algorithm, x_actor_lr=x_actor_lr, x_critic_lr=x_critic_lr, x_tau=x_tau,step=step) + "*.pth.tar"
-            
-        #weight_path = glob.glob(glob_path)[-1]
-        weight_path = glob_path
-        #print(weight_path)
+        glob_path = f'./experiment_{load_experiment_num}/checkpoints_cost/exp_id=0_Experiment_ver_.5.0(l=0, mean={load_mean}, std={load_std},*_(A={algorithm}, *)*.pth.tar'
+        weight_path = glob.glob(glob_path)[-1]
 
         if os.path.isfile(csv_file_name):
             print('exist')
@@ -62,7 +62,7 @@ for index, row in df_final_experiment.iterrows():
                                                   lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
                                                   algorithm=algorithm, x_actor_lr=x_actor_lr,
                                                   x_critic_lr=x_critic_lr, x_tau=x_tau,
-                                                  step=step,fine_tune = False, load_path = weight_path, test=False
+                                                  step=step,fine_tune = True, freeze = True, load_path = weight_path, test=False
                                                   ))
 
 print(final_experiment_ids)

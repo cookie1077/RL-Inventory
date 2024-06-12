@@ -37,7 +37,7 @@ print(os.getcwd())
 step=2
         
 
-for i in range(1, len(df_final_experiment)):
+for i in range(0, len(df_final_experiment)):
     row_env = df_final_experiment.iloc[i]
     row_model = df_final_models.iloc[i]
 
