@@ -28,7 +28,7 @@ class Agent:
         self.dimS = dimS
         self.dimA = dimA
         self.freeze = freeze
-        self.layers_to_freeze = 2
+        self.layers_to_freeze = 4
         
         self.gamma = gamma
         self.pi_lr = actor_lr

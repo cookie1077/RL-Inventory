@@ -10,14 +10,14 @@ from agent import Agent
 from itertools import product
 from utils import experiment_name
 
-
+0
 ray.init(num_cpus=8)
 assert ray.is_initialized() == True
 
 
 
 version = 5.0
-load_experiment_num=15
+load_experiment_num=18
 
 if not os.path.isdir(f'./experiment_{load_experiment_num}'):
     os.makedirs(f'./experiment_{load_experiment_num}')
@@ -52,11 +52,11 @@ for i in range(0, len(df_final_experiment)):
         x_actor_lr = lr_list[i][0]
         x_critic_lr = lr_list[i][1]
     
-        #glob_path = f'./experiment_{load_experiment_num}/checkpoints_cost/' + experiment_name(exp_id = exp_id, version=version, lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
-        #                                   algorithm=algorithm, x_actor_lr=x_actor_lr, x_critic_lr=x_critic_lr, x_tau=x_tau,step=step) + "*.pth.tar"
+        glob_path = f'./experiment_{load_experiment_num}/checkpoints_cost/' + experiment_name(exp_id = exp_id, version=version, lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
+                                           algorithm=algorithm, x_actor_lr=x_actor_lr, x_critic_lr=x_critic_lr, x_tau=x_tau,step=step) + "*.pth.tar"
         
-        glob_path = './inference/' + experiment_name(exp_id = exp_id, version=version, lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
-                                           algorithm=algorithm, x_actor_lr=x_actor_lr, x_critic_lr=x_critic_lr, x_tau=x_tau,step=2) + "*.pth.tar"
+        #glob_path = './inference/' + experiment_name(exp_id = exp_id, version=version, lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
+        #                                   algorithm=algorithm, x_actor_lr=x_actor_lr, x_critic_lr=x_critic_lr, x_tau=x_tau,step=2) + "*.pth.tar"
 
 
         weight_path = glob_path

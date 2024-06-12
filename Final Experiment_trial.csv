@@ -1,2 +1,2 @@
 lead_time,mean,std,p,alpha,algorithm,x_actor_lr,x_critic_lr,x_tau,expected_cost_best
-0,5,1,4,1,iddpg,5.5,3.5,4,
+0,5,2,4,1,iddpg,5.5,3.5,4,
