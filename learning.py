@@ -132,7 +132,7 @@ def run_rl(version=4.0,
     list_policy_value = [np.inf] * num_checkpoints
     list_policy_model = [None] * num_checkpoints
 
-    old_ratio = 0.1
+    old_ratio = 0.0
     eval_count = 0
 
     # main loop
@@ -165,7 +165,7 @@ def run_rl(version=4.0,
                 agent.train(old_ratio=old_ratio)
 
         if t % 10000 == 0:
-            old_ratio += 0.1
+            old_ratio += 0.0
 
         if t % eval_interval == 0:
             eval_t = int(t/eval_interval)

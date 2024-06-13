@@ -2,10 +2,12 @@ import torch.optim
 from torch.nn import MSELoss
 import numpy as np
 import copy
-from buffer import ReplayBuffer
+from buffer import ReplayBuffer, ReplayDataset
 #from ray.rllib.utils.replay_buffers.replay_buffer import ReplayBuffer
 from model import Actor, Critic
 import pickle
+from torch.utils.data import DataLoader
+from ewc import EWC
 
 
 class Agent:
@@ -18,7 +20,7 @@ class Agent:
                  critic_lr=1e-3,
                  tau=1e-3,
                  sigma=0.5,
-                 hidden_layers=[128, 128, 64, 64, 32, 32],
+                 hidden_layers=[150, 120, 80, 20],
                  buffer_size=int(1e6),
                  batch_size=128,
                  render=False,
@@ -167,6 +169,12 @@ class Agent:
         out = self.Q(observations, actions)
         loss_ftn = MSELoss()
         loss = loss_ftn(out, target)
+
+        # Add EWC penalty to the loss
+        ewc = EWC(self.Q, self.old_dataloader, is_critic=True)
+        ewc_penalty = ewc.penalty(self.Q)
+        loss += ewc.importance * ewc_penalty
+
         self.Q_optimizer.zero_grad()
         loss.backward()
         self.Q_optimizer.step()
@@ -179,6 +187,11 @@ class Agent:
             pi_loss = - torch.mean(self.Q(observations, self.pi(observations_changed)))
         else:
             print("error")
+
+        # Add EWC penalty to the pi_loss (for the policy network)
+        ewc = EWC(self.pi, self.old_dataloader, is_critic=False)
+        ewc_pi_penalty = ewc.penalty(self.pi)
+        pi_loss += ewc.importance * ewc_pi_penalty
 
         self.pi_optimizer.zero_grad()
         pi_loss.backward()
@@ -241,6 +254,10 @@ class Agent:
         with open(file=buffer_filename, mode='rb') as f:
             self.buffer=pickle.load(f)
 
+        self.old_buffer = copy.deepcopy(self.buffer)
+
+        replay_dataset = ReplayDataset(self.old_buffer)
+        self.old_dataloader = DataLoader(replay_dataset, batch_size=128, shuffle=True)
         return
 
 

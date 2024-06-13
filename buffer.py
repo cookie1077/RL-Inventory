@@ -1,5 +1,7 @@
 import numpy as np
 import pickle
+from torch.utils.data import Dataset
+import torch
 
 
 class ReplayBuffer:
@@ -135,3 +137,25 @@ class Memory:
 
     def __len__(self):
         return self.size
+    
+
+class ReplayDataset(Dataset):
+    def __init__(self, replay_buffer):
+        self.buffer = replay_buffer
+
+    def __len__(self):
+        return self.buffer.size
+
+    def __getitem__(self, idx):
+        state = self.buffer.states.data[idx]
+        action = self.buffer.states.data[idx]
+        reward = self.buffer.rewards.data[idx]
+        next_state = self.buffer.next_states.data[idx]
+        done = self.buffer.terminals.data[idx]
+        
+        return (torch.tensor(state, dtype=torch.float32),
+                torch.tensor(action, dtype=torch.float32),
+                torch.tensor(reward, dtype=torch.float32),
+                torch.tensor(next_state, dtype=torch.float32),
+                torch.tensor(done, dtype=torch.float32))
+
