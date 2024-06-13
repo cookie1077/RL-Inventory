@@ -33,7 +33,7 @@ def run_rl_plus(version=4.0,
            x_tau=3.0,
            sigma=0.1,
            hidden_layers=[150, 120, 80, 20],
-           max_iter=100000,
+           max_iter=50000,
            max_ep_len=500,
            eval_interval=1000,
            start_train=10000,
@@ -45,6 +45,7 @@ def run_rl_plus(version=4.0,
            render=False,
            step=0,
            fine_tune = False,
+           freeze = False,
            load_path = None,
            test = False):
     
@@ -77,11 +78,12 @@ def run_rl_plus(version=4.0,
                   hidden_layers=hidden_layers,
                   buffer_size=buffer_size,
                   batch_size=batch_size,
-                  render=render)
+                  render=render,
+                  freeze = freeze)
     
     if fine_tune:
         agent.load_model(load_path)
-
+        agent.buffer.set_finetune()
 
     if test:
         agent.load_model(load_path)
@@ -119,8 +121,8 @@ def run_rl_plus(version=4.0,
     ep_reward = 0
 
     list_t = list(range(0, max_iter + 1, eval_interval))
-    list_cost = [100.0] * len(list_t)
-    list_policy = [100.0] * len(list_t)
+    list_cost = [100.0] * len(list_t) 
+    list_policy = [100.0] * len(list_t) 
 
     list_cost_t = [0] * num_checkpoints
     list_cost_value = [np.inf] * num_checkpoints
@@ -129,6 +131,9 @@ def run_rl_plus(version=4.0,
     list_policy_t = [0] * num_checkpoints
     list_policy_value = [np.inf] * num_checkpoints
     list_policy_model = [None] * num_checkpoints
+
+    old_ratio = 0.1
+    eval_count = 0
 
     # main loop
     for t in range(max_iter + 1):
@@ -155,9 +160,15 @@ def run_rl_plus(version=4.0,
             step_count = 0
             ep_reward = 0
 
-        if (t >= start_train) and (t % train_interval == 0):
+        if (t >= start_train) and (t % train_interval == 0): 
             for _ in range(train_interval):
-                agent.train()
+                if fine_tune:
+                    agent.train(old_ratio=old_ratio) 
+                else:
+                    agent.train()
+
+        if t % 10000 == 0:
+            old_ratio += 0.05
 
         if t % eval_interval == 0:
             eval_t = int(t/eval_interval)
@@ -168,9 +179,21 @@ def run_rl_plus(version=4.0,
             list_cost[eval_t] = cost_value
             list_policy[eval_t] = policy_value
 
+            eval_count += 1
+
             if t % (1 * eval_interval) == 0:
-                print(lead_time, mean, std, p, alpha, algorithm, x_actor_lr, x_critic_lr, x_tau,
-                      '|  step {} cost_value: {:.4f}  |  policy_value: {:.4f}'.format(t, cost_value, policy_value))
+                print(lead_time, mean, std, p, alpha, algorithm, x_actor_lr, x_critic_lr, x_tau, 
+                      '|  step {} cost_value: {:.4f}  |  policy_value: {:.4f}'.format(t, cost_value, policy_value)) 
+
+            if eval_count >= 6 :  # Ensure we have enough data points to compare
+                # Calculate the average of the last 3 policy values
+                recent_average = sum(list_policy[eval_t-1:eval_t+1]) / 2.0
+                # Compare to the policy value 3 periods ago
+                past_value = list_policy[eval_t-2]
+
+                if recent_average < 0.2 and recent_average > 0.005 + past_value:
+                    print(f"Stopping training at t={t} due to stopping condition.")
+                    break
             
             if max(list_cost_value) > cost_value:
                 k = np.argmax(list_cost_value)
