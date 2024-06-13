@@ -28,7 +28,7 @@ if not os.path.isdir(f'./experiment_{experiment_num}'):
     os.makedirs(f'./experiment_{experiment_num}')
     os.makedirs(f'./experiment_{experiment_num}/checkpoints_cost')
     os.makedirs(f'./experiment_{experiment_num}/checkpoints_policy') 
-    os.makedirs(f'./experiment_{experiment_num}/data')
+    os.makedirs(f'./experiment_{experiment_num}/data') 
     os.makedirs(f'./experiment_{experiment_num}/summary data') 
 
 final_experiment_num = 1
@@ -54,19 +54,19 @@ for index, row in df_final_experiment.iterrows():
         weight_path = glob.glob(glob_path)[-1]
 
         if os.path.isfile(csv_file_name):
-            print('exist')
+            print('exist') 
             continue
            
-
-        final_experiment_ids.append(run_rl.remote(version=version, experiment_num=experiment_num,
+        exp = ray.get(run_rl.remote(version=version, experiment_num=experiment_num,
                                                   lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
                                                   algorithm=algorithm, x_actor_lr=x_actor_lr,
                                                   x_critic_lr=x_critic_lr, x_tau=x_tau,
                                                   step=step,fine_tune = True, freeze = False, load_path = weight_path, test=False
                                                   ))
+        final_experiment_ids.append(exp)
 
 print(final_experiment_ids)
-ray.get(final_experiment_ids)
+#ray.get(final_experiment_ids)
 
 final_experiment_results = [0] * (len(df_final_experiment) * final_experiment_num)
 final_experiment_summary = [0] * len(df_final_experiment)

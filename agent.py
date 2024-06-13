@@ -8,8 +8,9 @@ from model import Actor, Critic
 import pickle
 from torch.utils.data import DataLoader
 from ewc import EWC
+import ray
 
-
+@ray.remote
 class Agent:
     def __init__(self,
                  algorithm='ddpg',
@@ -129,6 +130,12 @@ class Agent:
             value = self.Q(state, action)
             value = value.numpy()
         return value
+    
+    def buffer_append(self, state, action, reward, newxt_state, done):
+        self.buffer.append(state, action, reward, newxt_state, done)
+    
+    def set_finetune(self):
+        self.buffer.set_finetune()
 
     def train(self, old_ratio=0):
         """
@@ -171,9 +178,10 @@ class Agent:
         loss = loss_ftn(out, target)
 
         # Add EWC penalty to the loss
-        ewc = EWC(self.Q, self.old_dataloader, is_critic=True)
-        ewc_penalty = ewc.penalty(self.Q)
-        loss += ewc.importance * ewc_penalty
+        ewc = EWC.remote(self.Q, self.old_dataloader, is_critic=True)
+        importance = ray.get(ewc.get_importance.remote())
+        ewc_penalty = ewc.penalty.remote(self.Q)
+        loss += importance * ewc_penalty
 
         self.Q_optimizer.zero_grad()
         loss.backward()
@@ -189,9 +197,10 @@ class Agent:
             print("error")
 
         # Add EWC penalty to the pi_loss (for the policy network)
-        ewc = EWC(self.pi, self.old_dataloader, is_critic=False)
-        ewc_pi_penalty = ewc.penalty(self.pi)
-        pi_loss += ewc.importance * ewc_pi_penalty
+        ewc = EWC.remote(self.pi, self.old_dataloader, is_critic=False)
+        importance = ray.get(ewc.get_importance.remote())
+        ewc_pi_penalty = ewc.penalty.remote(self.pi)
+        pi_loss += importance * ewc_pi_penalty
 
         self.pi_optimizer.zero_grad()
         pi_loss.backward()

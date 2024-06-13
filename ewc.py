@@ -2,17 +2,18 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
+import ray
 
+@ray.remote
 class EWC:
-    def __init__(self, model, dataloader, importance=1000, is_critic=False):
+    def __init__(self, model, dataloader, importance=1000, is_critic = False):
         self.model = model
         self.dataloader = dataloader
         self.importance = importance
         self.params = {n: p for n, p in self.model.named_parameters() if p.requires_grad}
         self._means = {}
-        self.is_critic = is_critic
         self._precision_matrices = self._diag_fisher()
-
+        self.is_critic = is_critic
 
         for n, p in self.params.items():
             self._means[n] = p.clone().detach()
@@ -25,19 +26,19 @@ class EWC:
         self.model.eval()
         for batch in self.dataloader:
             state, action, reward, next_state, done = batch
-            #state = state.to(self.model.device)
-            #action = action.to(self.model.device)
-            #reward = reward.to(self.model.device)
-            #next_state = next_state.to(self.model.device)
-            #done = done.to(self.model.device)
+            state = state.to(next(self.model.parameters()).device)
+            action = action.to(next(self.model.parameters()).device)
+            reward = reward.to(next(self.model.parameters()).device)
+            next_state = next_state.to(next(self.model.parameters()).device)
+            done = done.to(next(self.model.parameters()).device)
 
             self.model.zero_grad()
-            # Assuming the model predicts Q-values and is a Q-network
+
             if self.is_critic == True:
                 output = self.model(state, action)
             else:
                 output = self.model(state)
-            # You may need to adapt this depending on how your loss is computed in the RL setting
+                
             loss = F.mse_loss(output, reward)
             loss.backward()
             for n, p in self.model.named_parameters():

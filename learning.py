@@ -68,7 +68,7 @@ def run_rl(version=4.0,
     state_dim = env.observation_space.shape[0]
     action_dim = env.action_space.shape[0]
 
-    agent = Agent(algorithm=algorithm,
+    agent = Agent.remote(algorithm=algorithm,
                   dimS=state_dim,
                   dimA=action_dim,
                   gamma=gamma,
@@ -83,11 +83,11 @@ def run_rl(version=4.0,
                   freeze = freeze)
     
     if fine_tune:
-        agent.load_model(load_path)
-        agent.buffer.set_finetune()
+        agent.load_model.remote(load_path)
+        agent.set_finetune.remote()
 
     if test:
-        agent.load_model(load_path)
+        agent.load_model.remote(load_path)
 
         costs = []
         policies = []
@@ -141,7 +141,7 @@ def run_rl(version=4.0,
             action = env.action_space.sample()
             action = env.reverse_action(action)
         else:
-            action = agent.get_action(state)
+            action = agent.get_action.remote(state)
 
         # environment step
         next_state, reward, done, _ = env.step(action, translate=True, evaluate=False, penalty=penalty)
@@ -150,7 +150,7 @@ def run_rl(version=4.0,
         if step_count == max_ep_len:
             done = False
 
-        agent.buffer.append(state, action, reward, next_state, done)
+        agent.buffer_append.remote(state, action, reward, next_state, done)
 
         state = next_state
         ep_reward += reward
@@ -162,7 +162,7 @@ def run_rl(version=4.0,
 
         if (t >= start_train) and (t % train_interval == 0):
             for _ in range(train_interval):
-                agent.train(old_ratio=old_ratio)
+                agent.train.remote(old_ratio=old_ratio)
 
         if t % 10000 == 0:
             old_ratio += 0.0
@@ -188,7 +188,7 @@ def run_rl(version=4.0,
                 # Compare to the policy value 3 periods ago
                 past_value = list_policy[eval_t-2]
                 
-                if recent_average < 0.2 and recent_average > 0.005 + past_value:
+                if recent_average < 0.2 and recent_average > 0.025 + past_value:
                     print(f"Stopping training at t={t} due to stopping condition.")
                     break
             
@@ -196,13 +196,13 @@ def run_rl(version=4.0,
                 k = np.argmax(list_cost_value)
                 list_cost_t[k] = t
                 list_cost_value[k] = cost_value
-                list_cost_model[k] = agent.save_dict()
+                list_cost_model[k] = agent.save_dict().remote
 
             if max(list_policy_value) > policy_value:
                 k = np.argmax(list_policy_value)
                 list_policy_t[k] = t
                 list_policy_value[k] = policy_value
-                list_policy_model[k] = agent.save_dict()
+                list_policy_model[k] = agent.save_dict().remote
 
     csv_file_name = './experiment_' + str(experiment_num) + '/data/' + name + '.csv'
     df = pd.DataFrame({'step': list_t, 'expected_cost': list_cost, 'expected_diff': list_policy})
@@ -211,8 +211,8 @@ def run_rl(version=4.0,
     for i in range(num_checkpoints):
         cost_path = './experiment_' + str(experiment_num) + '/checkpoints_cost/' + name + '_(iter={})'.format(list_cost_t[i])
         policy_path = './experiment_' + str(experiment_num) + '/checkpoints_policy/' + name + '_(iter={})'.format(list_policy_t[i])
-        agent.save_model(model_dict=list_cost_model[i], path=cost_path)
-        agent.save_model(model_dict=list_policy_model[i], path=policy_path)
+        agent.save_model.remote(model_dict=list_cost_model[i], path=cost_path)
+        agent.save_model.remote(model_dict=list_policy_model[i], path=policy_path)
 
     expected_cost = df.nlargest(10, 'expected_cost')['expected_cost'].mean()
     expected_diff = df.nlargest(10, 'expected_diff')['expected_diff'].mean()
@@ -235,7 +235,7 @@ def eval_cost(agent, lead_time, mean, std, p, alpha, eval_num=100, render=False)
             if render and ep == 0:
                 env.render()
 
-            action = agent.get_action(state, eval=True)
+            action = ray.get(agent.get_action.remote(state, eval=True))
 
             next_state, reward, done, _ = env.step(action, evaluate=True)
             step_count += 1
@@ -258,7 +258,7 @@ def eval_policy(agent, lead_time, mean, std, p, alpha, eval_num=5000):
 
     for i in range(eval_num):
         state = env.reset_eval()
-        action_agent = env.trans_action(agent.get_action(state, eval=True))
+        action_agent = env.trans_action(agent.get_action.remote(state, eval=True))
         action_order = env.feasible_action(action_agent)
         action_optimal = env.optimal_action(state)
         diff_action = abs(action_order - action_optimal)
