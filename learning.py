@@ -84,6 +84,7 @@ def run_rl(version=4.0,
     
     if fine_tune:
         agent.load_model(load_path)
+        agent.buffer.set_finetune()
 
     if test:
         agent.load_model(load_path)
@@ -131,6 +132,9 @@ def run_rl(version=4.0,
     list_policy_value = [np.inf] * num_checkpoints
     list_policy_model = [None] * num_checkpoints
 
+    old_ratio = 0.1
+    eval_count = 0
+
     # main loop
     for t in range(max_iter + 1):
         if t < fill_buffer:
@@ -158,7 +162,10 @@ def run_rl(version=4.0,
 
         if (t >= start_train) and (t % train_interval == 0):
             for _ in range(train_interval):
-                agent.train()
+                agent.train(old_ratio=old_ratio)
+
+        if t % 10000 == 0:
+            old_ratio += 0.05
 
         if t % eval_interval == 0:
             eval_t = int(t/eval_interval)
@@ -169,9 +176,21 @@ def run_rl(version=4.0,
             list_cost[eval_t] = cost_value
             list_policy[eval_t] = policy_value
 
+            eval_count += 1
+
             if t % (1 * eval_interval) == 0:
-                print(lead_time, mean, std, p, alpha, algorithm, x_actor_lr, x_critic_lr, x_tau,
-                      '|  step {} cost_value: {:.4f}  |  policy_value: {:.4f}'.format(t, cost_value, policy_value))
+                print(lead_time, mean, std, p, alpha, algorithm, x_actor_lr, x_critic_lr, x_tau, 
+                      '|  step {} cost_value: {:.4f}  |  policy_value: {:.4f}'.format(t, cost_value, policy_value)) 
+                
+            if eval_count >= 6 :  # Ensure we have enough data points to compare
+                # Calculate the average of the last 3 policy values
+                recent_average = sum(list_policy[eval_t-1:eval_t+1]) / 2.0
+                # Compare to the policy value 3 periods ago
+                past_value = list_policy[eval_t-2]
+                
+                if recent_average < 0.2 and recent_average > 0.005 + past_value:
+                    print(f"Stopping training at t={t} due to stopping condition.")
+                    break
             
             if max(list_cost_value) > cost_value:
                 k = np.argmax(list_cost_value)

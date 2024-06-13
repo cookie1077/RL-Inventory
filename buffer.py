@@ -1,4 +1,5 @@
 import numpy as np
+import pickle
 
 
 class ReplayBuffer:
@@ -20,6 +21,11 @@ class ReplayBuffer:
 
         self.limit = limit
         self.size = 0
+        self.old_size = 0
+       
+
+    def set_finetune(self):
+        self.old_size = self.size
 
     def append(self, state, action, reward, next_state, done):
         self.states.append(state)
@@ -37,9 +43,20 @@ class ReplayBuffer:
 
         self.size = self.states.size
 
-    def sample_batch(self, batch_size):
+    def sample_batch(self, batch_size, old_ratio=0):
+        old_data_size = int(batch_size * old_ratio)
+        new_data_size = batch_size - old_data_size
+        
         rng = np.random.default_rng()
-        idxs = rng.choice(self.size, batch_size)
+        
+        # Sample old data
+        old_idxs = rng.choice(self.old_size, old_data_size, replace=False)
+        
+        # Sample new data
+        new_idxs = rng.choice(range(self.old_size, self.size), new_data_size, replace=False)
+        
+        # Combine indices
+        idxs = np.concatenate((old_idxs, new_idxs))
 
         # get batch from each buffer
         states = self.states.get_batch(idxs)
@@ -81,6 +98,15 @@ class ReplayBuffer:
             print("error")
 
         return batch
+    
+    def save(self, filename):
+        with open(filename, 'wb') as f:
+            pickle.dump(self, f)
+
+    @staticmethod
+    def load(filename):
+        with open(filename, 'rb') as f:
+            return pickle.load(f)
 
 
 class Memory:

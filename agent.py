@@ -5,6 +5,7 @@ import copy
 from buffer import ReplayBuffer
 #from ray.rllib.utils.replay_buffers.replay_buffer import ReplayBuffer
 from model import Actor, Critic
+import pickle
 
 
 class Agent:
@@ -28,7 +29,7 @@ class Agent:
         self.dimS = dimS
         self.dimA = dimA
         self.freeze = freeze
-        self.layers_to_freeze = 4
+        self.layers_to_freeze = 3
         
         self.gamma = gamma
         self.pi_lr = actor_lr
@@ -127,12 +128,12 @@ class Agent:
             value = value.numpy()
         return value
 
-    def train(self):
+    def train(self, old_ratio=0):
         """
         train actor-critic network using DDPG
         """
 
-        batch = self.buffer.sample_batch(batch_size=self.batch_size)
+        batch = self.buffer.sample_batch(batch_size=self.batch_size, old_ratio=old_ratio)
 
         # unroll batch
         observations = torch.tensor(batch['state'], dtype=torch.float)
@@ -200,6 +201,7 @@ class Agent:
         checkpoint_path = path + 'model.pth.tar'
         torch.save(model_dict, checkpoint_path)
 
+        self.buffer.save(path+'model.pickle')
         return
 
 
@@ -234,6 +236,10 @@ class Agent:
         else :
             self.pi_optimizer.load_state_dict(checkpoint['actor_optimizer'])
             self.Q_optimizer.load_state_dict(checkpoint['critic_optimizer'])
+
+        buffer_filename = path[:-7]+'pickle'
+        with open(file=buffer_filename, mode='rb') as f:
+            self.buffer=pickle.load(f)
 
         return
 
