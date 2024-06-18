@@ -81,7 +81,7 @@ for i in range(0, len(df_final_experiment)):
                                                     lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
                                                     algorithm=algorithm, x_actor_lr=x_actor_lr,
                                                     x_critic_lr=x_critic_lr, x_tau=x_tau,
-                                                    step=step,fine_tune = False, load_path = file, test=True)
+                                                    step=step,fine_tune = False, load_path = file, test=True, freeze=True)
         
         cost_value, policy_value = ray.get(result)
         

@@ -17,19 +17,19 @@ assert ray.is_initialized() == True
 
 
 version = 5.0
-load_experiment_num = 17
-load_mean = 7.0 
+load_experiment_num = 19
+load_mean = 5.0 
 load_std = 1.0 
 
 
-experiment_num = 18
+experiment_num = 30
 
 if not os.path.isdir(f'./experiment_{experiment_num}'):
     os.makedirs(f'./experiment_{experiment_num}')
     os.makedirs(f'./experiment_{experiment_num}/checkpoints_cost')
-    os.makedirs(f'./experiment_{experiment_num}/checkpoints_policy')
+    os.makedirs(f'./experiment_{experiment_num}/checkpoints_policy') 
     os.makedirs(f'./experiment_{experiment_num}/data')
-    os.makedirs(f'./experiment_{experiment_num}/summary data')
+    os.makedirs(f'./experiment_{experiment_num}/summary data') 
 
 final_experiment_num = 1
 final_experiment_ids = []

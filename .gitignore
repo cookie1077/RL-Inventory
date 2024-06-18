@@ -22,4 +22,5 @@ checkpoints/
 
 # File management files
 .DS_Store
+*.pickle
 

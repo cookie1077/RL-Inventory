@@ -17,12 +17,13 @@ assert ray.is_initialized() == True
 
 
 version = 5.1 
-experiment_num = 12 
+experiment_num = 10.1 
 
-fine_tune = True
+fine_tune = False
+freeze = False
 
-load_experiment_num = 11 
-load_mean = 7.0 
+load_experiment_num = 10 
+load_mean = 5.0 
 load_std = 1.0 
 
 
@@ -73,7 +74,7 @@ for index, row in df_final_experiment.iterrows():
                                                   lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
                                                   algorithm=algorithm, x_actor_lr=x_actor_lr,
                                                   x_critic_lr=x_critic_lr, x_tau=x_tau,
-                                                  step=step,fine_tune = fine_tune, load_path = weight_path
+                                                  step=step,fine_tune = fine_tune, freeze = freeze, load_path = weight_path
                                                   ))
 
 ray.get(final_experiment_ids)

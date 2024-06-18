@@ -10,14 +10,14 @@ from agent import Agent
 from itertools import product
 from utils import experiment_name
 
-0
+
 ray.init(num_cpus=8)
 assert ray.is_initialized() == True
 
 
 
 version = 5.0
-load_experiment_num=18
+load_experiment_num=25
 
 if not os.path.isdir(f'./experiment_{load_experiment_num}'):
     os.makedirs(f'./experiment_{load_experiment_num}')
@@ -26,7 +26,7 @@ if not os.path.isdir(f'./experiment_{load_experiment_num}'):
     os.makedirs(f'./experiment_{load_experiment_num}/data')
     os.makedirs(f'./experiment_{load_experiment_num}/summary data')
 
-#lr_list = [[5.5, 3.5], [6.0, 4.0], [6.5, 4.5]]
+#lr_list = [[5.5, 3.5], [6.0, 4.0], [6.5, 4.5]] 
 lr_list = [[5.5, 3.5]]
 
 df_final_experiment = pd.read_csv('./Evaluate_env.csv')
