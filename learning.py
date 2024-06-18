@@ -132,7 +132,7 @@ def run_rl(version=4.0,
     list_policy_value = [np.inf] * num_checkpoints
     list_policy_model = [None] * num_checkpoints
 
-    old_ratio = 0.0
+    old_ratio = 0.1
     eval_count = 0
 
     # main loop
@@ -165,7 +165,7 @@ def run_rl(version=4.0,
                 agent.train(old_ratio=old_ratio)
 
         if t % 10000 == 0:
-            old_ratio += 0.0
+            old_ratio += 0.05
 
         if t % eval_interval == 0:
             eval_t = int(t/eval_interval)
@@ -203,6 +203,8 @@ def run_rl(version=4.0,
                 list_policy_t[k] = t
                 list_policy_value[k] = policy_value
                 list_policy_model[k] = agent.save_dict()
+        
+        if t == 10001: break
 
     csv_file_name = './experiment_' + str(experiment_num) + '/data/' + name + '.csv'
     df = pd.DataFrame({'step': list_t, 'expected_cost': list_cost, 'expected_diff': list_policy})

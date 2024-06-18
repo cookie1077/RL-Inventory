@@ -62,7 +62,7 @@ for index, row in df_final_experiment.iterrows():
                                                   lead_time=lead_time, mean = mean, std=std, p=p, alpha=alpha,
                                                   algorithm=algorithm, x_actor_lr=x_actor_lr,
                                                   x_critic_lr=x_critic_lr, x_tau=x_tau,
-                                                  step=step,fine_tune = True, freeze = False, load_path = weight_path, test=False
+                                                  step=step,fine_tune = True, freeze = True, load_path = weight_path, test=False
                                                   ))
 
 print(final_experiment_ids)

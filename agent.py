@@ -257,7 +257,7 @@ class Agent:
         self.old_buffer = copy.deepcopy(self.buffer)
 
         replay_dataset = ReplayDataset(self.old_buffer)
-        self.old_dataloader = DataLoader(replay_dataset, batch_size=128, shuffle=True)
+        self.old_dataloader = DataLoader(replay_dataset, batch_size=128, shuffle=True, num_workers=4)
         return
 
 

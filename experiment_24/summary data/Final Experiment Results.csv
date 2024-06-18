@@ -1,2 +1,0 @@
-,lead_time,mean,std,p,alpha,algorithm,x_actor_lr,x_critic_lr,x_tau,step,expected_cost,expected_diff
-0,0,5.0,2.0,4.0,1.0,iddpg,5.5,3.5,4.0,0,3.051790869740608,0.1285203788625226
